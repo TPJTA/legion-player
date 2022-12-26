@@ -1,19 +1,23 @@
-import { RootPlayer } from "@/root.player";
+import { RootPlayer } from "@/stores/root.store";
 import { observable, action } from "mobx";
-import { Events, CSS_PREFIX } from "@/conf/index";
+import { Events, CSS_PREFIX } from "@/conf/index.conf";
+import "reflect-metadata";
 
-export class BaseStore<
-  T extends Record<any, any> = null,
-  depStore extends BaseStore[] = null
+export { RootPlayer };
+export type BaseStoreConstructor = new (rootPlayer: RootPlayer) => BaseStore;
+
+export abstract class BaseStore<
+  T extends Record<any, any> = any,
+  depStore extends BaseStore[] = any
 > {
   /** @description store标识 */
-  readonly name: string;
+  abstract readonly name: string;
 
   /** @description css标识 */
   protected readonly ppx = CSS_PREFIX;
 
   /**
-   * rootplay实例
+   * @description rootplay实例
    */
   protected rootPlayer: RootPlayer;
 
@@ -33,15 +37,14 @@ export class BaseStore<
   /**
    * @description 依赖的其他store
    */
-  protected store: {
+  store: {
     [key in depStore[number]["name"]]: Extract<depStore[number], { name: key }>;
   };
 
   constructor(rootPlayer: RootPlayer) {
     this.state = this.defaultState;
-    this.name = Object.getPrototypeOf(this).constructor.name.toLowerCase();
     this.rootPlayer = rootPlayer;
-
+    this.onInit();
     rootPlayer.on(Events.Player_Reload, this.onReload);
     rootPlayer.on(Events.Player_Destory, this.onDestory);
   }
@@ -52,6 +55,9 @@ export class BaseStore<
       this.state[key] = newState[key];
     }
   }
+
+  /** @description 初始化完成调用 */
+  protected onInit() {}
 
   /**
    * @description 播放器重载时自动调用
@@ -76,11 +82,11 @@ export class BaseStore<
 }
 
 /**
- *
- * @param depsStore
- * @description
+ * @description store装饰器, 用于收集依赖的store
  */
-export function StoreDecorator(depsStore?: typeof BaseStore[]): ClassDecorator {
+export function StoreDecorator(
+  depsStore?: BaseStoreConstructor[]
+): ClassDecorator {
   return (constructor) => {
     Reflect.defineMetadata("depsStore", depsStore, constructor);
   };

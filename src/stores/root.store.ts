@@ -1,10 +1,11 @@
-import { RootPlayer } from "@/root.player";
-import type { BaseStore } from "@/base/base.store";
-import { Events, commonStores } from "@/conf/index";
+import { RootPlayer as IRootPlayer } from "@/root.player";
+import type { BaseStore, BaseStoreConstructor } from "@/base/base.store";
+import { Events, commonStores } from "@/conf/index.conf";
 
+export type RootPlayer = IRootPlayer;
 export class RootStore {
   private rootPlayer: RootPlayer;
-  private subStore: { [key in BaseStore["name"]]: BaseStore };
+  private subStore: Map<BaseStoreConstructor, BaseStore> = new Map();
 
   constructor(rootPlayer: RootPlayer) {
     this.rootPlayer = rootPlayer;
@@ -13,32 +14,51 @@ export class RootStore {
   }
 
   private initSubStore() {
-    const initStore = (storeConstructor: typeof BaseStore) => {
-      const depsStore: typeof BaseStore[] = Reflect.getMetadata(
-        "depsStore",
-        storeConstructor
-      );
+    const stores = [...commonStores];
+    stores.forEach((s) => this.initStore(s));
+    this.rootPlayer.emit(Events.Player_Store_Initialization);
+  }
+
+  initStore(storeConstructor: BaseStoreConstructor) {
+    const depsStore: BaseStoreConstructor[] = Reflect.getMetadata(
+      "depsStore",
+      storeConstructor
+    );
+    const depsStoreObj = {};
+
+    if (!this.subStore.has(storeConstructor)) {
       if (depsStore) {
         for (const i of depsStore) {
-          initStore(i);
+          this.initStore(i);
         }
       }
-      let store = new storeConstructor(this.rootPlayer);
-      if (this.subStore[store.name]) {
-        if (Object.getPrototypeOf(this).constructor !== storeConstructor) {
-          throw new Error(
-            "the name of the store is repeated, please change your store name"
-          );
+      depsStore?.forEach((i) => {
+        const store = this.subStore.get(i);
+        if (store.name) {
+          depsStoreObj[store.name] = store;
         }
-        store = null;
-      } else {
-        this.subStore[store.name] = store;
+      });
+      storeConstructor.prototype.store = depsStoreObj;
+
+      const store = new storeConstructor(this.rootPlayer);
+      if (!store.name) {
+        console.error(
+          `The ${storeConstructor.name} has no name, Please set a name`
+        );
       }
-    };
+      this.subStore.set(storeConstructor, store);
 
-    const stores = [...commonStores, ...this.rootPlayer.input.store];
-    stores.forEach((s) => initStore(s));
-
-    this.rootPlayer.emit(Events.Player_Store_Init);
+      depsStoreObj[store.name] = store;
+    } else {
+      const curStore = this.subStore.get(storeConstructor);
+      depsStoreObj[curStore.name] = curStore;
+      depsStore?.forEach((i) => {
+        const store = this.subStore.get(i);
+        if (store.name) {
+          depsStoreObj[store.name] = store;
+        }
+      });
+    }
+    return depsStoreObj;
   }
 }

@@ -1,37 +1,42 @@
-import { Configure, Events } from "@/conf/index";
+import { Configure, Events, EventName } from "@/conf/index.conf";
 import { EventEmitter } from "events";
 import { RootStore } from "@/stores/root.store";
-import "reflect-metadata";
-
+import { TemplateNodes, createTemplate } from "@/utility/template";
+import "@/styles/template.less";
 export class RootPlayer {
-  RootStore: RootStore;
-  input: Configure;
+  static events = Events;
+  rootStore: RootStore;
+  input: Configure = {} as Configure;
   private emitter: EventEmitter;
-  container: HTMLElement;
+  nodes: TemplateNodes;
 
   constructor(input: Configure) {
     this.input = Object.assign(this.input, input);
     if (!this.input["element"]) {
       throw new Error("error player container");
     }
-    this.container = this.input["element"];
+    this.nodes = createTemplate(this.input["element"]);
     this.emitter = new EventEmitter();
-    this.RootStore = new RootStore(this);
+    this.rootStore = new RootStore(this);
   }
 
-  emit(event: Events, ...args: any[]) {
+  get initStore() {
+    return this.rootStore.initStore.bind(this.rootStore);
+  }
+
+  emit(event: string, ...args: any[]) {
     return this.emitter.emit(event, ...args);
   }
 
-  on(event: Events, listener: (...args: any) => void) {
+  on(event: string, listener: (...args: any) => void) {
     this.emitter.on(event, listener);
   }
 
-  once(event: Events, listener: (...args: any) => void) {
+  once(event: string, listener: (...args: any) => void) {
     this.emitter.once(event, listener);
   }
 
-  off(event: Events, listener: (...args: any) => void) {
+  off(event: string, listener: (...args: any) => void) {
     this.emitter.off(event, listener);
   }
 }

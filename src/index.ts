@@ -1,3 +1,9 @@
 import { RootPlayer } from "./root.player";
 
-(window as any).legion = RootPlayer;
+declare global {
+  interface Window {
+    legion: typeof RootPlayer;
+  }
+}
+
+window.legion = RootPlayer;

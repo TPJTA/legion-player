@@ -4,6 +4,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 
 const env = process.env.NODE_ENV
+const isDEV = env === 'development'
 
 /** @type {webpack.Configuration} */
 let webpackConfig = {
@@ -12,9 +13,10 @@ let webpackConfig = {
   },
   output: {
     path: path.join(__dirname, './dist/'),
-    filename: '[name].[fullhash:7].js',
+    filename: `[name]${isDEV ? '' : '.[fullhash:7]'}.js`,
     publicPath: '/',
   },
+  devtool: isDEV ? 'eval-source-map' : false,
   resolve: {
     extensions: ['.js', ".ts", '.json'],
     alias: {
@@ -68,7 +70,12 @@ let webpackConfig = {
         use: [
           "style-loader",
           'css-loader',
-          'less-loader'
+          {
+            loader: 'less-loader',
+            options: {
+              additionalData: `@import (reference) "@/styles/global.less";`,
+            }
+          }
         ],
       }
     ]
@@ -77,6 +84,11 @@ let webpackConfig = {
     new CleanWebpackPlugin(),
     new ESLintPlugin()
   ],
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'demo'),
+    },
+  }
 };
 
 module.exports = webpackConfig;

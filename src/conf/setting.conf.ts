@@ -1,10 +1,10 @@
-import type { BaseStore } from "@/base/base.store";
+import {
+  BasePluginConstructor,
+  lazyBasePluginConstructor,
+} from "@/base/base.plugin";
 
-export interface BaseConfigure {
-  videoSrc: string;
-}
-
-export interface Configure extends BaseConfigure {
+export interface Configure {
   element: HTMLElement;
-  store?: typeof BaseStore[];
+  videoSrc: string;
+  plugins?: Array<BasePluginConstructor | lazyBasePluginConstructor>;
 }

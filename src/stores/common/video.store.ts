@@ -1,6 +1,6 @@
-import { BaseStore, StoreDecorator } from "@/base/base.store";
-import { RootPlayer } from "@/root.player";
-import { Events } from "@/conf";
+import { BaseStore } from "@/base/base.store";
+import { Events } from "@/conf/index.conf";
+import "@/styles/stores/video.less";
 
 export const enum Video_Status {
   /** 未初始化完成 */
@@ -38,6 +38,7 @@ const VideoDefaultState = {
 };
 
 export class VideoStore extends BaseStore<typeof VideoDefaultState> {
+  readonly name = "videoStore";
   area: HTMLElement;
   video: HTMLVideoElement;
 
@@ -45,9 +46,8 @@ export class VideoStore extends BaseStore<typeof VideoDefaultState> {
     return VideoDefaultState;
   }
 
-  constructor(rootPlayer: RootPlayer) {
-    super(rootPlayer);
-    this.preloadDom();
+  onInit() {
+    this.preloadDOM();
     this.addMeidiaEvents();
   }
 
@@ -61,13 +61,13 @@ export class VideoStore extends BaseStore<typeof VideoDefaultState> {
     this.addMeidiaEvents();
   }
 
-  private preloadDom() {
+  private preloadDOM() {
     const ppx = this.ppx;
     this.area = document.createElement("div");
     this.area.classList.add(`${ppx}-video-warp`);
-    this.area.innerHTML = `<video clss="${ppx}-video"></video>`;
+    this.area.innerHTML = `<video class="${ppx}-video"></video>`;
     this.video = this.area.querySelector("video");
-    this.rootPlayer.container.appendChild(this.area);
+    this.rootPlayer.nodes.primary.appendChild(this.area);
   }
 
   private addMeidiaEvents() {
@@ -177,10 +177,12 @@ export class VideoStore extends BaseStore<typeof VideoDefaultState> {
 
   private onProgress = (...args) => {
     const timeRange = this.video.buffered;
-    this.setState({
-      bufferedTime: timeRange.end(timeRange.length - 1),
-    });
-    this.rootPlayer.emit(Events.Player_progress, ...args);
+    if (timeRange.length > 0) {
+      this.setState({
+        bufferedTime: timeRange.end(timeRange.length - 1),
+      });
+      this.rootPlayer.emit(Events.Player_progress, ...args);
+    }
   };
 
   private onRatechange = (...args) => {
