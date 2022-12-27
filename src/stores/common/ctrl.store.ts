@@ -7,7 +7,7 @@ export default class CtrlStore extends BaseStore<null, [VideoStore]> {
   readonly name = "ctrlStore";
   nodes: {
     container: HTMLElement;
-    progress: HTMLElement;
+    progressWarp: HTMLElement;
     ctrlLeft: HTMLElement;
     ctrlRight: HTMLElement;
   };
@@ -21,9 +21,8 @@ export default class CtrlStore extends BaseStore<null, [VideoStore]> {
     const container = document.createElement("div");
     container.classList.add(`${ppx}-ctrl-warp`);
     container.innerHTML = `
-      <div class="${ppx}-ctrl-mask"></div>
       <div class="${ppx}-ctrl">
-        <div class="${ppx}-ctrl-progress"></div>
+        <div class="${ppx}-ctrl-progress-warp"></div>
         <div class="${ppx}-ctrl-left"></div>
         <div class="${ppx}-ctrl-right"></div>
       </div>
@@ -31,7 +30,7 @@ export default class CtrlStore extends BaseStore<null, [VideoStore]> {
     this.rootPlayer.nodes.primary.appendChild(container);
     this.nodes = {
       container,
-      progress: container.querySelector(`.${ppx}-ctrl-progress`),
+      progressWarp: container.querySelector(`.${ppx}-ctrl-progress-warp`),
       ctrlLeft: container.querySelector(`.${ppx}-ctrl-left`),
       ctrlRight: container.querySelector(`.${ppx}-ctrl-right`),
     };

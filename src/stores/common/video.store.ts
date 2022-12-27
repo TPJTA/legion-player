@@ -1,6 +1,7 @@
 import { BaseStore } from "@/base/base.store";
 import { Events } from "@/conf/index.conf";
 import "@/styles/stores/video.less";
+import { when } from "mobx";
 
 export const enum Video_Status {
   /** 未初始化完成 */
@@ -35,11 +36,15 @@ const VideoDefaultState = {
   volume: 1,
   /** load metadata */
   isMetadata: false,
+  videoHeight: 0,
+  videoWidth: 0,
 };
 
 export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   readonly name = "videoStore";
   private area: HTMLElement;
+  private playPromise: Promise<void>;
+
   video: HTMLVideoElement;
 
   protected get defaultState() {
@@ -48,6 +53,23 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
 
   protected onInit() {
     this.preloadDOM();
+  }
+
+  play() {
+    if (this.state.isMetadata) {
+      return this.video.play();
+    } else {
+      if (!this.playPromise) {
+        this.playPromise = when(() => this.state.isMetadata).then(() =>
+          this.video?.play()
+        );
+      }
+      return this.playPromise;
+    }
+  }
+
+  pause() {
+    this.video?.pause();
   }
 
   replaceVideo(src: string[] | string) {
@@ -63,6 +85,7 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
       html += `<source src="${i}">`;
       return html;
     }, "");
+    this.video.load();
     this.video.classList.add(`${this.ppx}-video`);
     this.area.appendChild(this.video);
     this.addMeidiaEvents();
@@ -78,6 +101,7 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   }
 
   private addMeidiaEvents() {
+    this.video.addEventListener("click", this.onClick);
     this.video.addEventListener("canplay", this.onCanplay);
     this.video.addEventListener("durationchange", this.onDurationchange);
     this.video.addEventListener("ended", this.onEnded);
@@ -98,6 +122,7 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   }
 
   private removeMeidiaEvents() {
+    this.video.removeEventListener("click", this.onClick);
     this.video.removeEventListener("canplay", this.onCanplay);
     this.video.removeEventListener("durationchange", this.onDurationchange);
     this.video.removeEventListener("ended", this.onEnded);
@@ -116,6 +141,14 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     this.video.removeEventListener("volumechange", this.onVolumechange);
     this.video.removeEventListener("waiting", this.onWaiting);
   }
+
+  private onClick = () => {
+    if (this.video.paused) {
+      this.play();
+    } else {
+      this.pause();
+    }
+  };
 
   private onCanplay = (...args) => {
     this.setState({
@@ -157,6 +190,8 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     this.setState({
       status: Video_Status.Ready,
       isMetadata: true,
+      videoHeight: this.video.videoHeight,
+      videoWidth: this.video.videoWidth,
     });
     this.rootPlayer.emit(Events.Player_loadedmetadata, ...args);
   };
@@ -227,4 +262,12 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     });
     this.rootPlayer.emit(Events.Player_waiting, ...args);
   };
+
+  protected onReload() {
+    this.playPromise = null;
+  }
+
+  protected onDestory() {
+    this.playPromise = null;
+  }
 }

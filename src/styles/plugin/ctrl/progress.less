@@ -1,0 +1,57 @@
+.@{ppx}-ctrl-progress {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  cursor: pointer;
+  pointer-events: all;
+  transition: height 0.2s;
+
+  &:hover {
+    .@{ppx}-ctrl-progress-buffer,
+    .@{ppx}-ctrl-progress-time {
+      height: 5px;
+    }
+
+    .@{ppx}-ctrl-progress-time::after {
+      transform: translate(25%, -50%) scale(1);
+    }
+  }
+
+  &-buffer {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 3px;
+    width: 0;
+    transform: translateY(-50%);
+    transition: height 0.2s;
+    background: rgba(255, 255, 255, 0.5);
+    z-index: 1;
+  }
+
+  &-time {
+    position: relative;
+    left: 0;
+    top: 50%;
+    height: 3px;
+    width: 0;
+    transform: translateY(-50%);
+    transition: height 0.2s;
+    background: @primary-color;
+    z-index: 2;
+
+    &::after {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translate(25%, -50%) scale(0);
+      display: block;
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: @primary-color;
+      transition: all 0.2s;
+    }
+  }
+}

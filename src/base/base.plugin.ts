@@ -1,5 +1,5 @@
 import { BaseStore, RootPlayer, BaseStoreConstructor } from "./base.store";
-import { Events } from "@/conf/index.conf";
+import { Events, CSS_PREFIX } from "@/conf/index.conf";
 
 export type BasePluginConstructor = new (rootPlayer: RootPlayer) => BasePlugin;
 export type lazyBasePluginConstructor = () => Promise<{
@@ -11,6 +11,9 @@ export class BasePlugin<depStore extends BaseStore[] = any> {
    * @description rootplay实例
    */
   protected rootPlayer: RootPlayer;
+
+  /** @description css标识 */
+  protected readonly ppx = CSS_PREFIX;
 
   /**
    * @description 依赖的其他store

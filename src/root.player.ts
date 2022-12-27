@@ -24,6 +24,14 @@ export class RootPlayer {
     return this.rootStore.initStore.bind(this.rootStore);
   }
 
+  play() {
+    return this.rootStore.videoStore.play();
+  }
+
+  pause() {
+    return this.rootStore.videoStore.pause();
+  }
+
   emit(event: string, ...args: any[]) {
     return this.emitter.emit(event, ...args);
   }
