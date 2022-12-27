@@ -4,7 +4,7 @@ import { observable, action, computed } from "mobx";
 import { BasePluginConstructor } from "@/base/base.plugin";
 
 @StoreDecorator()
-export class ConfigStore extends BaseStore {
+export default class ConfigStore extends BaseStore {
   readonly name = "configStore";
   @observable.shallow
   primary: Partial<Configure>;

@@ -37,25 +37,32 @@ const VideoDefaultState = {
   isMetadata: false,
 };
 
-export class VideoStore extends BaseStore<typeof VideoDefaultState> {
+export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   readonly name = "videoStore";
-  area: HTMLElement;
+  private area: HTMLElement;
   video: HTMLVideoElement;
 
-  get defaultState() {
+  protected get defaultState() {
     return VideoDefaultState;
   }
 
-  onInit() {
+  protected onInit() {
     this.preloadDOM();
-    this.addMeidiaEvents();
   }
 
-  replaceVideo() {
+  replaceVideo(src: string[] | string) {
     this.removeMeidiaEvents();
-    this.area.removeChild(this.video);
-
+    if (this.video) {
+      this.area.removeChild(this.video);
+    }
     this.video = document.createElement("video");
+    if (!Array.isArray(src)) {
+      src = [src];
+    }
+    this.video.innerHTML = src.reduce((html, i) => {
+      html += `<source src="${i}">`;
+      return html;
+    }, "");
     this.video.classList.add(`${this.ppx}-video`);
     this.area.appendChild(this.video);
     this.addMeidiaEvents();
@@ -65,7 +72,7 @@ export class VideoStore extends BaseStore<typeof VideoDefaultState> {
     const ppx = this.ppx;
     this.area = document.createElement("div");
     this.area.classList.add(`${ppx}-video-warp`);
-    this.area.innerHTML = `<video class="${ppx}-video"></video>`;
+    this.area.innerHTML = `<video class="${ppx}-video" controls></video>`;
     this.video = this.area.querySelector("video");
     this.rootPlayer.nodes.primary.appendChild(this.area);
   }

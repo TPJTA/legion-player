@@ -1,3 +1,1 @@
-import { ProgressPlugin } from "@/plugins/ctrl/progress.ctrl";
-
-export const commonPlugin = [ProgressPlugin];
+export const commonPlugin = [() => import("@/plugins/ctrl/progress.ctrl")];

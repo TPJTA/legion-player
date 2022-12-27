@@ -24,7 +24,6 @@
     videoSrc: "/test.mp4"
   }
   let player = new window.legion(config)
-  console.log(window.legion.events);
   for (let name of Object.values(window.legion.events)) {
     player.on(name, () => {
       console.log(name);

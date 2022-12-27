@@ -8,13 +8,16 @@ import {
   BasePluginConstructor,
   lazyBasePluginConstructor,
 } from "@/base/base.plugin";
-import { VideoStore } from "@/stores/common/video.store";
-import { ConfigStore } from "./config.store";
+import VideoStore from "@/stores/common/video.store";
+import ConfigStore from "./config.store";
 import { when } from "mobx";
 import { commonPlugin } from "@/conf/plugin.conf";
 
 @StoreDecorator([VideoStore, ConfigStore])
-export class PluginStore extends BaseStore<null, [VideoStore, ConfigStore]> {
+export default class PluginStore extends BaseStore<
+  null,
+  [VideoStore, ConfigStore]
+> {
   readonly name = "pluginStore";
   private isDestory = false;
   private subPlugin: Map<BasePluginConstructor, BasePlugin> = new Map();
@@ -23,7 +26,7 @@ export class PluginStore extends BaseStore<null, [VideoStore, ConfigStore]> {
     const overTimePromise = new Promise((reslove) => {
       setTimeout(() => {
         reslove("");
-      }, 2000);
+      }, 5000);
     });
     Promise.race([
       when(() => this.store.videoStore.state.isMetadata),
@@ -43,8 +46,11 @@ export class PluginStore extends BaseStore<null, [VideoStore, ConfigStore]> {
       } else {
         const loadPlugin = await (<lazyBasePluginConstructor>plugin)();
         pluginConstructor = loadPlugin.default;
+        if (!pluginConstructor) {
+          throw new Error("lazy plugin error, check the types of export");
+        }
       }
-      if (!this.subPlugin.has(pluginConstructor)) {
+      if (!this.isDestory && !this.subPlugin.has(pluginConstructor)) {
         const depsStore: BaseStoreConstructor[] = Reflect.getMetadata(
           "depsStore",
           pluginConstructor

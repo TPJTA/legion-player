@@ -1,9 +1,9 @@
 import { BaseStore, StoreDecorator } from "@/base/base.store";
-import { VideoStore } from "@/stores/common/video.store";
+import VideoStore from "@/stores/common/video.store";
 import "@/styles/stores/ctrl.less";
 
 @StoreDecorator([VideoStore])
-export class CtrlStore extends BaseStore<null, [VideoStore]> {
+export default class CtrlStore extends BaseStore<null, [VideoStore]> {
   readonly name = "ctrlStore";
   nodes: {
     container: HTMLElement;

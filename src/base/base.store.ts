@@ -24,7 +24,6 @@ export abstract class BaseStore<
   /**
    * @description store 的状态，如需修改调用 `this.setState`
    */
-  @observable.shallow
   state: T;
 
   /**
@@ -42,7 +41,7 @@ export abstract class BaseStore<
   };
 
   constructor(rootPlayer: RootPlayer) {
-    this.state = this.defaultState;
+    this.state = observable.object(this.defaultState, null, { deep: false });
     this.rootPlayer = rootPlayer;
     this.onInit();
     rootPlayer.on(Events.Player_Reload, this.onReload);
