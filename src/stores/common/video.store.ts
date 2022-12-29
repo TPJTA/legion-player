@@ -38,6 +38,7 @@ const VideoDefaultState = {
   volume: 1,
   /** load metadata */
   isMetadata: false,
+  seeking: false,
   videoHeight: 0,
   videoWidth: 0,
 };
@@ -97,11 +98,12 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     this.video.addEventListener("playing", this.onPlaying);
     this.video.addEventListener("progress", this.onProgress);
     this.video.addEventListener("ratechange", this.onRatechange);
-    this.video.addEventListener("seeked", this.onSeeked);
-    this.video.addEventListener("seeking", this.onSeeking);
     this.video.addEventListener("timeupdate", this.onTimeupdate);
     this.video.addEventListener("volumechange", this.onVolumechange);
     this.video.addEventListener("waiting", this.onWaiting);
+
+    this.rootPlayer.on(Events.Player_seeked, this.onSeeked);
+    this.rootPlayer.on(Events.Player_seeking, this.onSeeking);
   }
 
   private removeMeidiaEvents() {
@@ -117,11 +119,12 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     this.video.removeEventListener("playing", this.onPlaying);
     this.video.removeEventListener("progress", this.onProgress);
     this.video.removeEventListener("ratechange", this.onRatechange);
-    this.video.removeEventListener("seeked", this.onSeeked);
-    this.video.removeEventListener("seeking", this.onSeeking);
     this.video.removeEventListener("timeupdate", this.onTimeupdate);
     this.video.removeEventListener("volumechange", this.onVolumechange);
     this.video.removeEventListener("waiting", this.onWaiting);
+
+    this.rootPlayer.off(Events.Player_seeked, this.onSeeked);
+    this.rootPlayer.off(Events.Player_seeking, this.onSeeking);
   }
 
   @bind
@@ -225,11 +228,15 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   };
 
   private onSeeked = (...args) => {
-    this.rootPlayer.emit(Events.Player_seeked, ...args);
+    this.setState({
+      seeking: false,
+    });
   };
 
   private onSeeking = (...args) => {
-    this.rootPlayer.emit(Events.Player_seeking, ...args);
+    this.setState({
+      seeking: true,
+    });
   };
 
   private onTimeupdate = (...args) => {

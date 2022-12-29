@@ -30,8 +30,6 @@ export default class TimeCtrlPulgin extends BasePlugin<
     reaction(
       () => this.store.videoStore.state.duration,
       (time) => {
-        console.log(time);
-
         this.nodes.durction.innerHTML = formatSeconds(time);
       },
       {

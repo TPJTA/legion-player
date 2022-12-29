@@ -24,6 +24,7 @@ export default class CtrlStore extends BaseStore<
     right: HTMLElement;
   };
   private hideTimer: number;
+  private ctrlOver = false;
 
   protected onInit() {
     this.preloadDOM();
@@ -72,6 +73,18 @@ export default class CtrlStore extends BaseStore<
     }
   }
 
+  show() {
+    this.setState({
+      hide: false,
+    });
+  }
+
+  hide() {
+    this.setState({
+      hide: true,
+    });
+  }
+
   private preloadDOM() {
     const ppx = this.ppx;
     const container = document.createElement("div");
@@ -102,36 +115,36 @@ export default class CtrlStore extends BaseStore<
       this.onPrimaryLeave
     );
     this.nodes.container.addEventListener("mousemove", this.onContainerMove);
+    this.nodes.container.addEventListener("mouseleave", this.onContainerLeave);
   }
 
   @bind
   private onPrimarymove() {
-    this.hideTimer && window.clearTimeout(this.hideTimer);
-    this.setState({
-      hide: false,
-    });
-    this.hideTimer = window.setTimeout(() => {
-      this.setState({
-        hide: true,
-      });
-    }, 3000);
+    if (!this.ctrlOver) {
+      this.hideTimer && window.clearTimeout(this.hideTimer);
+      this.show();
+      this.hideTimer = window.setTimeout(() => {
+        this.hide();
+      }, 3000);
+    }
   }
 
   @bind
   private onPrimaryLeave() {
     window.clearTimeout(this.hideTimer);
-    this.setState({
-      hide: true,
-    });
+    this.hide();
   }
 
   @bind
   private onContainerMove(e: MouseEvent) {
     this.hideTimer && window.clearTimeout(this.hideTimer);
     this.hideTimer = null;
-    this.setState({
-      hide: false,
-    });
-    e.stopPropagation();
+    this.show();
+    this.ctrlOver = true;
+  }
+
+  @bind
+  private onContainerLeave() {
+    this.ctrlOver = false;
   }
 }

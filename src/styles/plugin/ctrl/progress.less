@@ -4,15 +4,14 @@
   height: 12px;
   cursor: pointer;
   pointer-events: all;
-  transition: height 0.2s;
 
-  &:hover {
+  &-over {
     .@{ppx}-ctrl-progress-buffer,
     .@{ppx}-ctrl-progress-time {
       height: 5px;
     }
 
-    .@{ppx}-ctrl-progress-time::after {
+    .@{ppx}-ctrl-progress-time-icon {
       transform: translate(25%, -50%) scale(1);
     }
   }
@@ -27,6 +26,7 @@
     transition: height 0.2s;
     background: rgba(255, 255, 255, 0.5);
     z-index: 1;
+    transition: height 0.2s;
   }
 
   &-time {
@@ -39,14 +39,14 @@
     transition: height 0.2s;
     background: @primary-color;
     z-index: 2;
+    transition: height 0.2s;
 
-    &::after {
+    &-icon {
       position: absolute;
       top: 50%;
       right: 0;
       transform: translate(25%, -50%) scale(0);
       display: block;
-      content: "";
       width: 12px;
       height: 12px;
       border-radius: 50%;
@@ -57,7 +57,11 @@
 }
 
 .@{ppx}-ctrl-warp-hide {
-  .@{ppx}-ctrl-progress-time::after {
+  .@{ppx}-ctrl-progress {
+    height: 3px;
+    transition: none;
+  }
+  .@{ppx}-ctrl-progress-time-icon {
     display: none;
   }
 }

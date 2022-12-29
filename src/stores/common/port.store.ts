@@ -17,6 +17,13 @@ export default class PortStore extends BaseStore<null, [VideoStore]> {
     this.videoStore = this.store.videoStore;
   }
 
+  seek(time: number, play = false) {
+    this.video.currentTime = Math.floor(time);
+    if (play && this.videoStore.state.paused) {
+      this.play();
+    }
+  }
+
   play() {
     if (this.videoStore.state.isMetadata) {
       return this.videoStore.video.play();
