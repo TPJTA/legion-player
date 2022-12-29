@@ -1,1 +1,5 @@
-export const commonPlugin = [() => import("@/plugins/ctrl/progress.ctrl")];
+export const commonPlugin = [
+  () => import("@/plugins/ctrl/progress.ctrl"),
+  () => import("@/plugins/ctrl/play.ctrl"),
+  () => import("@/plugins/ctrl/time.ctrl"),
+];

@@ -1,7 +1,7 @@
 import { RootPlayer as IRootPlayer } from "@/root.player";
 import type { BaseStore, BaseStoreConstructor } from "@/base/base.store";
 import { Events, commonStores } from "@/conf/index.conf";
-import VideoStore from "./common/video.store";
+import PortStore from "./common/port.store";
 
 export type RootPlayer = IRootPlayer;
 export class RootStore {
@@ -20,8 +20,8 @@ export class RootStore {
     this.rootPlayer.emit(Events.Player_Store_Initialization);
   }
 
-  get videoStore() {
-    return <VideoStore>this.subStore.get(VideoStore);
+  get portStore() {
+    return <PortStore>this.subStore.get(PortStore);
   }
 
   initStore(storeConstructor: BaseStoreConstructor) {

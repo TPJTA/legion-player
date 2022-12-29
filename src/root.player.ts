@@ -25,11 +25,11 @@ export class RootPlayer {
   }
 
   play() {
-    return this.rootStore.videoStore.play();
+    return this.rootStore.portStore.play();
   }
 
   pause() {
-    return this.rootStore.videoStore.pause();
+    return this.rootStore.portStore.pause();
   }
 
   emit(event: string, ...args: any[]) {

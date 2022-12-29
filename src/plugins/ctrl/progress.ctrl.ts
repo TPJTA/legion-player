@@ -8,7 +8,6 @@ export default class ProgressPlugin extends BasePlugin<
   [VideoStore, CtrlStore]
 > {
   private nodes: {
-    warp: HTMLElement;
     progress: HTMLElement;
     buffer: HTMLElement;
     time: HTMLElement;
@@ -44,9 +43,8 @@ export default class ProgressPlugin extends BasePlugin<
       <div class="${ppx}-ctrl-progress-time"></div>
     `;
 
-    this.store.ctrlStore.nodes.progressWarp.appendChild(progress);
+    this.store.ctrlStore.renderCtrlBtn(progress, "top");
     this.nodes = {
-      warp: this.store.ctrlStore.nodes.progressWarp,
       progress,
       buffer: progress.querySelector(`.${ppx}-ctrl-progress-buffer`),
       time: progress.querySelector(`.${ppx}-ctrl-progress-time`),

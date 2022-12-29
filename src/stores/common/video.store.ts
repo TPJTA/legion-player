@@ -1,7 +1,7 @@
 import { BaseStore } from "@/base/base.store";
 import { Events } from "@/conf/index.conf";
 import "@/styles/stores/video.less";
-import { when } from "mobx";
+import bind from "bind-decorator";
 
 export const enum Video_Status {
   /** 未初始化完成 */
@@ -21,6 +21,8 @@ export const enum Video_Status {
 }
 
 const VideoDefaultState = {
+  /** 是否暂停 */
+  paused: true,
   status: <Video_Status>1,
   /** 当前播放时间 */
   currentTime: 0,
@@ -43,7 +45,6 @@ const VideoDefaultState = {
 export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   readonly name = "videoStore";
   private area: HTMLElement;
-  private playPromise: Promise<void>;
 
   video: HTMLVideoElement;
 
@@ -53,23 +54,6 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
 
   protected onInit() {
     this.preloadDOM();
-  }
-
-  play() {
-    if (this.state.isMetadata) {
-      return this.video.play();
-    } else {
-      if (!this.playPromise) {
-        this.playPromise = when(() => this.state.isMetadata).then(() =>
-          this.video?.play()
-        );
-      }
-      return this.playPromise;
-    }
-  }
-
-  pause() {
-    this.video?.pause();
   }
 
   replaceVideo(src: string[] | string) {
@@ -101,7 +85,6 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   }
 
   private addMeidiaEvents() {
-    this.video.addEventListener("click", this.onClick);
     this.video.addEventListener("canplay", this.onCanplay);
     this.video.addEventListener("durationchange", this.onDurationchange);
     this.video.addEventListener("ended", this.onEnded);
@@ -122,7 +105,6 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
   }
 
   private removeMeidiaEvents() {
-    this.video.removeEventListener("click", this.onClick);
     this.video.removeEventListener("canplay", this.onCanplay);
     this.video.removeEventListener("durationchange", this.onDurationchange);
     this.video.removeEventListener("ended", this.onEnded);
@@ -142,82 +124,90 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     this.video.removeEventListener("waiting", this.onWaiting);
   }
 
-  private onClick = () => {
-    if (this.video.paused) {
-      this.play();
-    } else {
-      this.pause();
-    }
-  };
-
-  private onCanplay = (...args) => {
+  @bind
+  private onCanplay(...args) {
     this.setState({
       status: Video_Status.Ready,
     });
     this.rootPlayer.emit(Events.Player_canplay, ...args);
-  };
+  }
 
-  private onDurationchange = (...args) => {
+  @bind
+  private onDurationchange(...args) {
     this.setState({
       duration: this.video.duration,
     });
     this.rootPlayer.emit(Events.Player_durationchange, ...args);
-  };
+  }
 
-  private onEnded = (...args) => {
+  @bind
+  private onEnded(...args) {
     this.setState({
+      paused: true,
       status: Video_Status.Ended,
     });
     this.rootPlayer.emit(Events.Player_ended, ...args);
-  };
+  }
 
-  private onError = (...args) => {
+  @bind
+  private onError(...args) {
     this.setState({
       status: Video_Status.Error,
     });
     this.rootPlayer.emit(Events.Player_error, ...args);
-  };
+  }
 
-  private onLoadeddata = (...args) => {
+  @bind
+  private onLoadeddata(...args) {
     this.rootPlayer.emit(Events.Player_loadeddata, ...args);
-  };
+  }
 
-  private onLoadstart = (...args) => {
+  @bind
+  private onLoadstart(...args) {
     this.rootPlayer.emit(Events.Player_loadstart, ...args);
-  };
+  }
 
-  private onLoadedmetadata = (...args) => {
+  @bind
+  private onLoadedmetadata(...args) {
     this.setState({
       status: Video_Status.Ready,
       isMetadata: true,
       videoHeight: this.video.videoHeight,
       videoWidth: this.video.videoWidth,
+      duration: this.video.duration,
     });
-    this.rootPlayer.emit(Events.Player_loadedmetadata, ...args);
-  };
 
-  private onPause = (...args) => {
+    this.rootPlayer.emit(Events.Player_loadedmetadata, ...args);
+  }
+
+  @bind
+  private onPause(...args) {
     this.setState({
+      paused: true,
       status: Video_Status.Pause,
     });
     this.rootPlayer.emit(Events.Player_pause, ...args);
-  };
+  }
 
-  private onPlay = (...args) => {
+  @bind
+  private onPlay(...args) {
     this.setState({
+      paused: false,
       status: Video_Status.Play,
     });
     this.rootPlayer.emit(Events.Player_play, ...args);
-  };
+  }
 
-  private onPlaying = (...args) => {
+  @bind
+  private onPlaying(...args) {
     this.setState({
       status: Video_Status.Play,
     });
     this.rootPlayer.emit(Events.Player_playing, ...args);
-  };
+  }
 
-  private onProgress = (...args) => {
+  @bind
+  private onProgress(...args) {
     const timeRange = this.video.buffered;
     if (timeRange.length > 0) {
       this.setState({
@@ -225,7 +215,7 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
       });
       this.rootPlayer.emit(Events.Player_progress, ...args);
     }
-  };
+  }
 
   private onRatechange = (...args) => {
     this.setState({
@@ -262,12 +252,4 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     });
     this.rootPlayer.emit(Events.Player_waiting, ...args);
   };
-
-  protected onReload() {
-    this.playPromise = null;
-  }
-
-  protected onDestory() {
-    this.playPromise = null;
-  }
 }

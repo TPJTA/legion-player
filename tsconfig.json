@@ -21,10 +21,11 @@
     "moduleResolution": "node",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
   },
+  "files": ["src/types/globals.d.ts"],
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
     "webpack.config.js"

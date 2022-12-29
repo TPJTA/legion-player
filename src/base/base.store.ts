@@ -1,5 +1,5 @@
 import { RootPlayer } from "@/stores/root.store";
-import { observable, action } from "mobx";
+import { observable, action, runInAction } from "mobx";
 import { Events, CSS_PREFIX } from "@/conf/index.conf";
 import "reflect-metadata";
 
@@ -7,7 +7,7 @@ export { RootPlayer };
 export type BaseStoreConstructor = new (rootPlayer: RootPlayer) => BaseStore;
 
 export abstract class BaseStore<
-  T extends Record<any, any> = any,
+  T extends object = any,
   depStore extends BaseStore[] = any
 > {
   /** @description store标识 */
@@ -36,7 +36,7 @@ export abstract class BaseStore<
   /**
    * @description 依赖的其他store
    */
-  store: {
+  protected store: {
     [key in depStore[number]["name"]]: Extract<depStore[number], { name: key }>;
   };
 
@@ -50,9 +50,11 @@ export abstract class BaseStore<
 
   @action
   setState(newState: Partial<T>) {
-    for (const key in newState) {
-      this.state[key] = newState[key];
-    }
+    runInAction(() => {
+      for (const key in newState) {
+        this.state[key] = newState[key];
+      }
+    });
   }
 
   /** @description 初始化完成调用 */
