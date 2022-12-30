@@ -4,6 +4,7 @@ import CtrlStore from "@/stores/common/ctrl.store";
 import PortStore from "@/stores/common/port.store";
 import VideoStore from "@/stores/common/video.store";
 import "@/styles/plugin/ctrl/progress.less";
+import { formatSeconds } from "@/utility/tools";
 import bind from "bind-decorator";
 import { reaction } from "mobx";
 @PluginDecorator([VideoStore, CtrlStore, PortStore])
@@ -14,6 +15,7 @@ export default class ProgressPlugin extends BasePlugin<
     progress: HTMLElement;
     buffer: HTMLElement;
     time: HTMLElement;
+    tooltip: HTMLElement;
   };
 
   onInit() {
@@ -47,6 +49,7 @@ export default class ProgressPlugin extends BasePlugin<
       <div class="${ppx}-ctrl-progress-time">
         <div class="${ppx}-ctrl-progress-time-icon"></div>
       </div>
+      <div class="${ppx}-ctrl-progress-tooltip">00:00</div>
     `;
 
     this.store.ctrlStore.renderCtrlBtn(progress, "top");
@@ -54,31 +57,45 @@ export default class ProgressPlugin extends BasePlugin<
       progress,
       buffer: progress.querySelector(`.${ppx}-ctrl-progress-buffer`),
       time: progress.querySelector(`.${ppx}-ctrl-progress-time`),
+      tooltip: progress.querySelector(`.${ppx}-ctrl-progress-tooltip`),
     };
   }
 
   private addEventListener() {
-    this.nodes.progress.addEventListener("mouseenter", this.onMousemove);
-    this.nodes.progress.addEventListener("mouseleave", this.onMouseout);
+    this.nodes.progress.addEventListener("mousemove", this.onMousemove);
+    this.nodes.progress.addEventListener("mouseenter", this.onMouseenter);
+    this.nodes.progress.addEventListener("mouseleave", this.onMouseleave);
     this.nodes.progress.addEventListener("mousedown", this.onMousedown);
   }
 
   private removeEventListener() {
-    this.nodes.progress.removeEventListener("mouseenter", this.onMousemove);
-    this.nodes.progress.removeEventListener("mouseleave", this.onMouseout);
+    this.nodes.progress.removeEventListener("mouseenter", this.onMouseenter);
+    this.nodes.progress.removeEventListener("mouseleave", this.onMouseleave);
+    this.nodes.progress.removeEventListener("mousedown", this.onMousedown);
   }
 
   @bind
-  private onMousemove(e) {
+  private onMouseenter() {
     if (!this.store.ctrlStore.state.hide) {
       this.nodes.progress.classList.add(`${this.ppx}-ctrl-progress-over`);
     }
   }
 
   @bind
-  private onMouseout() {
+  private onMousemove(e) {
+    if (
+      !this.store.ctrlStore.state.hide &&
+      !this.store.videoStore.state.seeking
+    ) {
+      this.setTooltipPosition(e.pageX);
+    }
+  }
+
+  @bind
+  private onMouseleave() {
     if (!this.store.videoStore.state.seeking) {
       this.nodes.progress.classList.remove(`${this.ppx}-ctrl-progress-over`);
+      this.nodes.tooltip.style.display = "none";
     }
   }
 
@@ -110,6 +127,38 @@ export default class ProgressPlugin extends BasePlugin<
         ((offsetX - progressLeft) / this.nodes.progress.offsetWidth) * 100 +
         "%";
     }
+
+    this.setTooltipPosition(offsetX);
+  }
+
+  private setTooltipPosition(offsetX: number) {
+    this.nodes.tooltip.style.display = "block";
+    const progressLeft = this.nodes.progress.getBoundingClientRect().x;
+    const progressRight = progressLeft + this.nodes.progress.offsetWidth;
+    const halfClientWidth = this.nodes.tooltip.offsetWidth / 2;
+    let left = 0;
+    let percent = 0;
+    if (progressLeft >= offsetX) {
+      percent = 0;
+      left = 0;
+    } else if (progressRight <= offsetX) {
+      percent = 100;
+      left = progressRight - progressLeft - this.nodes.tooltip.clientWidth;
+    } else {
+      percent = (offsetX - progressLeft) / this.nodes.progress.offsetWidth;
+      if (progressLeft + halfClientWidth >= offsetX) {
+        left = 0;
+      } else if (progressRight - halfClientWidth <= offsetX) {
+        left = progressRight - progressLeft - this.nodes.tooltip.clientWidth;
+      } else {
+        left = offsetX - progressLeft - halfClientWidth;
+      }
+    }
+
+    this.nodes.tooltip.innerHTML = formatSeconds(
+      this.store.videoStore.state.duration * percent
+    );
+    this.nodes.tooltip.style.left = left + "px";
   }
 
   @bind
@@ -117,6 +166,7 @@ export default class ProgressPlugin extends BasePlugin<
     const percent = parseFloat(this.nodes.time.style.width);
     const time = (this.store.videoStore.state.duration * percent) / 100;
     this.nodes.progress.classList.remove(`${this.ppx}-ctrl-progress-over`);
+    this.nodes.tooltip.style.display = "none";
     this.store.portStore.seek(time, true);
     this.rootPlayer.emit(Events.Player_seeked);
     window.removeEventListener("mousemove", this.progressDrag);
