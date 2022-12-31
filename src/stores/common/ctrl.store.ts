@@ -92,33 +92,40 @@ export default class CtrlStore extends BaseStore<
   }
 
   private renderTooltip(ctrlEle: HTMLElement, tooltip: HTMLElement) {
+    const ctrlTooltipWarp = document.createElement("div");
+    ctrlTooltipWarp.className = `${this.ppx}-ctrl-tooltip-warp`;
     const ctrlTooltip = document.createElement("div");
     ctrlTooltip.className = `${this.ppx}-ctrl-tooltip`;
     ctrlTooltip.appendChild(tooltip);
-    ctrlEle.addEventListener("mouseenter", this.showToolTip);
-    ctrlEle.addEventListener("mouseleave", this.hideToolTip);
+    ctrlTooltipWarp.appendChild(ctrlTooltip);
 
-    ctrlEle.append(ctrlTooltip);
+    const toolTipEvent = this.createToolTipEvent();
+    ctrlEle.addEventListener("mouseenter", toolTipEvent);
+    ctrlEle.addEventListener("mouseleave", toolTipEvent);
+
+    ctrlEle.append(ctrlTooltipWarp);
   }
 
-  @bind
-  private showToolTip(e: MouseEvent) {
-    const toolTip = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(
-      `.${this.ppx}-ctrl-tooltip`
-    );
-    if (toolTip) {
-      toolTip.classList.add(`${this.ppx}-ctrl-tooltip-show`);
-    }
-  }
+  private createToolTipEvent() {
+    let hideTimer;
+    const handle = (e: MouseEvent) => {
+      const toolTip = (
+        e.currentTarget as HTMLElement
+      ).querySelector<HTMLElement>(`.${this.ppx}-ctrl-tooltip-warp`);
+      if (toolTip) {
+        hideTimer && window.clearTimeout(hideTimer);
 
-  @bind
-  private hideToolTip(e: MouseEvent) {
-    const toolTip = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(
-      `.${this.ppx}-ctrl-tooltip`
-    );
-    if (toolTip) {
-      toolTip.classList.remove(`${this.ppx}-ctrl-tooltip-show`);
-    }
+        if (e.type === "mouseenter") {
+          toolTip.classList.add(`${this.ppx}-ctrl-tooltip-warp-show`);
+        } else {
+          hideTimer = window.setTimeout(() => {
+            toolTip.classList.remove(`${this.ppx}-ctrl-tooltip-warp-show`);
+            hideTimer = null;
+          }, 200);
+        }
+      }
+    };
+    return handle;
   }
 
   show() {
