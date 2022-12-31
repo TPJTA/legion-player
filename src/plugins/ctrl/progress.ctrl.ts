@@ -52,7 +52,7 @@ export default class ProgressPlugin extends BasePlugin<
       <div class="${ppx}-ctrl-progress-tooltip">00:00</div>
     `;
 
-    this.store.ctrlStore.renderCtrlBtn(progress, "top");
+    this.store.ctrlStore.renderCtrlBtn({ ele: progress }, "top");
     this.nodes = {
       progress,
       buffer: progress.querySelector(`.${ppx}-ctrl-progress-buffer`),
@@ -116,7 +116,9 @@ export default class ProgressPlugin extends BasePlugin<
   }
 
   private setDragPosition(offsetX: number) {
-    const progressLeft = this.nodes.progress.getBoundingClientRect().x;
+    const progressLeft =
+      this.nodes.progress.getBoundingClientRect().x +
+      document.documentElement.scrollLeft;
     const progressRight = progressLeft + this.nodes.progress.offsetWidth;
     if (progressLeft >= offsetX) {
       this.nodes.time.style.width = 0 + "%";
@@ -133,7 +135,9 @@ export default class ProgressPlugin extends BasePlugin<
 
   private setTooltipPosition(offsetX: number) {
     this.nodes.tooltip.style.display = "block";
-    const progressLeft = this.nodes.progress.getBoundingClientRect().x;
+    const progressLeft =
+      this.nodes.progress.getBoundingClientRect().x +
+      document.documentElement.scrollLeft;
     const progressRight = progressLeft + this.nodes.progress.offsetWidth;
     const halfClientWidth = this.nodes.tooltip.offsetWidth / 2;
     let left = 0;

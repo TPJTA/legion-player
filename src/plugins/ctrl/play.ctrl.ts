@@ -46,7 +46,7 @@ export default class PlayPlugin extends BasePlugin<
     </div>
     `;
     this.playButton = playButton;
-    this.store.ctrlStore.renderCtrlBtn(playButton, "left", 1);
+    this.store.ctrlStore.renderCtrlBtn({ ele: playButton }, "left", 1);
   }
 
   private addEventListener() {

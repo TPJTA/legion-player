@@ -7,6 +7,7 @@ import { reaction } from "mobx";
 const CtrlStoreDefaultState = {
   hide: true,
 };
+type CtrlBtn = { ele: HTMLElement; tooltip?: HTMLElement };
 
 @StoreDecorator([VideoStore])
 export default class CtrlStore extends BaseStore<
@@ -32,8 +33,9 @@ export default class CtrlStore extends BaseStore<
     reaction(
       () => this.state.hide,
       (hide) => {
-        this.nodes.container.classList[hide ? "add" : "remove"](
-          `${this.ppx}-ctrl-warp-hide`
+        this.rootPlayer.nodes.container.setAttribute(
+          "data-ctrl-hide",
+          String(hide)
         );
       },
       {
@@ -42,7 +44,6 @@ export default class CtrlStore extends BaseStore<
     );
     this.addEventListener();
   }
-
   /**
    * @description 渲染ctrl上的按钮
    * @param ele 渲染的元素
@@ -50,12 +51,29 @@ export default class CtrlStore extends BaseStore<
    * @param index 序号，序号越大排的越后，不填默认最后一个
    */
   renderCtrlBtn(
-    ele: HTMLElement,
+    { ele }: Pick<CtrlBtn, "ele">,
+    position: "top",
+    index?: number
+  ): void;
+  renderCtrlBtn(
+    { ele, tooltip }: CtrlBtn,
+    position: "left" | "right",
+    index?: number
+  ): void;
+  renderCtrlBtn(
+    { ele, tooltip }: CtrlBtn,
     position: "top" | "left" | "right",
     index?: number
   ) {
+    const ctrlEle = document.createElement("div");
+    ctrlEle.className = `${this.ppx}-ctrl-button`;
+    ctrlEle.append(ele);
+    if (tooltip) {
+      this.renderTooltip(ctrlEle, tooltip);
+    }
+
     if (typeof index == "number") {
-      ele.setAttribute("data-index", index.toFixed());
+      ctrlEle.setAttribute("data-index", index.toFixed());
       const children = this.nodes[position].children;
       for (let i = children.length - 1; i >= 0; i--) {
         const curIndex = parseInt(children[i].getAttribute("data-index"));
@@ -63,13 +81,43 @@ export default class CtrlStore extends BaseStore<
         if (Number.isNaN(curIndex)) {
           continue;
         } else if (curIndex < index) {
-          children[i].insertAdjacentElement("afterend", ele);
+          children[i].insertAdjacentElement("afterend", ctrlEle);
           return;
         }
       }
-      this.nodes[position].insertAdjacentElement("afterbegin", ele);
+      this.nodes[position].insertAdjacentElement("afterbegin", ctrlEle);
     } else {
-      this.nodes[position].appendChild(ele);
+      this.nodes[position].appendChild(ctrlEle);
+    }
+  }
+
+  private renderTooltip(ctrlEle: HTMLElement, tooltip: HTMLElement) {
+    const ctrlTooltip = document.createElement("div");
+    ctrlTooltip.className = `${this.ppx}-ctrl-tooltip`;
+    ctrlTooltip.appendChild(tooltip);
+    ctrlEle.addEventListener("mouseenter", this.showToolTip);
+    ctrlEle.addEventListener("mouseleave", this.hideToolTip);
+
+    ctrlEle.append(ctrlTooltip);
+  }
+
+  @bind
+  private showToolTip(e: MouseEvent) {
+    const toolTip = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(
+      `.${this.ppx}-ctrl-tooltip`
+    );
+    if (toolTip) {
+      toolTip.classList.add(`${this.ppx}-ctrl-tooltip-show`);
+    }
+  }
+
+  @bind
+  private hideToolTip(e: MouseEvent) {
+    const toolTip = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(
+      `.${this.ppx}-ctrl-tooltip`
+    );
+    if (toolTip) {
+      toolTip.classList.remove(`${this.ppx}-ctrl-tooltip-show`);
     }
   }
 
@@ -136,7 +184,7 @@ export default class CtrlStore extends BaseStore<
   }
 
   @bind
-  private onContainerMove(e: MouseEvent) {
+  private onContainerMove() {
     this.hideTimer && window.clearTimeout(this.hideTimer);
     this.hideTimer = null;
     this.show();

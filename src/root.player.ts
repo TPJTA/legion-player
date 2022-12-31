@@ -17,6 +17,7 @@ export class RootPlayer {
     }
     this.nodes = createTemplate(this.input["element"]);
     this.emitter = new EventEmitter();
+    this.emitter.setMaxListeners(0);
     this.rootStore = new RootStore(this);
   }
 

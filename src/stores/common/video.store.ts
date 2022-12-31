@@ -20,10 +20,18 @@ export const enum Video_Status {
   Error,
 }
 
+export const enum Video_Screen {
+  normal = 1,
+  web,
+  full,
+  pip,
+}
+
 const VideoDefaultState = {
   /** 是否暂停 */
   paused: true,
   status: <Video_Status>1,
+  screen: <Video_Screen>1,
   /** 当前播放时间 */
   currentTime: 0,
   /** 视频总时长 */

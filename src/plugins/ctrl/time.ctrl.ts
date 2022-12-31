@@ -51,6 +51,6 @@ export default class TimeCtrlPulgin extends BasePlugin<
       current: warp.querySelector(`.${ppx}-ctrl-time-current`),
       durction: warp.querySelector(`.${ppx}-ctrl-time-durction`),
     };
-    this.store.ctrlStore.renderCtrlBtn(warp, "left", 2);
+    this.store.ctrlStore.renderCtrlBtn({ ele: warp }, "left", 2);
   }
 }

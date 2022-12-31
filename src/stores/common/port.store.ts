@@ -1,7 +1,8 @@
 /** @file 封装video的各种api */
 import { BaseStore, StoreDecorator } from "@/base/base.store";
 import VideoStore from "./video.store";
-import { when } from "mobx";
+import { computed, when } from "mobx";
+import { Video_Screen } from "./video.store";
 
 @StoreDecorator([VideoStore])
 export default class PortStore extends BaseStore<null, [VideoStore]> {
@@ -39,6 +40,25 @@ export default class PortStore extends BaseStore<null, [VideoStore]> {
 
   pause() {
     this.videoStore.video?.pause();
+  }
+
+  fullScreen() {
+    this.videoStore.setState({
+      screen: Video_Screen.full,
+    });
+    this.rootPlayer.nodes.primary.requestFullscreen();
+  }
+
+  @computed
+  get isFull() {
+    return this.videoStore.state.screen === Video_Screen.full;
+  }
+
+  exitFullScreen() {
+    this.videoStore.setState({
+      screen: Video_Screen.normal,
+    });
+    document.exitFullscreen();
   }
 
   protected onReload() {
