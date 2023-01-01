@@ -1,0 +1,14 @@
+name: Docker Build and Deploy
+on:
+  push:
+    branches:
+      - feature/workflow
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+      - run: npm i -g pnpm
+      - run: pnpm i
+      - run: pnpm lint
