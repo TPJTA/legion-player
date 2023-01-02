@@ -1,0 +1,36 @@
+name: lint check
+on:
+  push:
+    branches:
+      - feature/file-workflow
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2 # 用于检测action是否正确
+      - uses: actions/setup-node@v3
+      - run: npm i -g pnpm
+      - name: install packages
+        run: pnpm i
+      - run: pnpm lint
+
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2 # 用于检测action是否正确
+      - uses: actions/setup-node@v3
+      - run: npm i -g pnpm
+      - name: install packages
+        run: pnpm i
+      - run: pnpm build
+      - name: copy file to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "dist/*" # job中的文件列表
+          strip_components: 1 # 删除一层目录结构，不写则服务器上的路径为 legion/dist/*
+          target: "legion" # 服务器上的目标路径
+
