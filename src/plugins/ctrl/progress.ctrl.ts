@@ -146,7 +146,7 @@ export default class ProgressPlugin extends BasePlugin<
       percent = 0;
       left = 0;
     } else if (progressRight <= offsetX) {
-      percent = 100;
+      percent = 1;
       left = progressRight - progressLeft - this.nodes.tooltip.clientWidth;
     } else {
       percent = (offsetX - progressLeft) / this.nodes.progress.offsetWidth;
