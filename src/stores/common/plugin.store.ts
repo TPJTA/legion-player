@@ -13,23 +13,24 @@ import ConfigStore from "./config.store";
 import { when } from "mobx";
 import { commonPlugin } from "@/conf/plugin.conf";
 
-@StoreDecorator([VideoStore, ConfigStore])
-export default class PluginStore extends BaseStore<
-  null,
-  [VideoStore, ConfigStore]
-> {
-  readonly name = "pluginStore";
+@StoreDecorator
+export default class PluginStore extends BaseStore<null> {
   private isDestory = false;
   private subPlugin: Map<BasePluginConstructor, BasePlugin> = new Map();
 
-  protected onInit(): void {
+  constructor(
+    private videoStore: VideoStore,
+    private configStore: ConfigStore
+  ) {
+    super();
+    BasePlugin.prototype.rootPlayer = this.rootPlayer;
     const overTimePromise = new Promise((reslove) => {
       setTimeout(() => {
         reslove("");
       }, 5000);
     });
     Promise.race([
-      when(() => this.store.videoStore.state.isMetadata),
+      when(() => this.videoStore.state.isMetadata),
       overTimePromise,
     ]).then(() => {
       this.initPlugin();
@@ -37,7 +38,7 @@ export default class PluginStore extends BaseStore<
   }
 
   private initPlugin() {
-    const plugins = [...this.store.configStore.plugins, ...commonPlugin];
+    const plugins = [...this.configStore.plugins, ...commonPlugin];
     plugins?.forEach(async (plugin) => {
       let pluginConstructor: BasePluginConstructor;
 
@@ -52,20 +53,18 @@ export default class PluginStore extends BaseStore<
       }
       if (!this.isDestory && !this.subPlugin.has(pluginConstructor)) {
         const depsStore: BaseStoreConstructor[] = Reflect.getMetadata(
-          "depsStore",
+          "design:paramtypes",
           pluginConstructor
         );
-        let depsStoreObj = {};
-        depsStore?.forEach((i) => {
-          depsStoreObj = Object.assign(
-            depsStoreObj,
-            this.rootPlayer.initStore(i)
+        let depsStoreInstance: BaseStore[] = [];
+        if (depsStore) {
+          depsStoreInstance = depsStore.map((dep) =>
+            this.rootPlayer.initStore(dep)
           );
-        });
-        pluginConstructor.prototype.store = depsStoreObj;
+        }
         this.subPlugin.set(
           pluginConstructor,
-          new pluginConstructor(this.rootPlayer)
+          new pluginConstructor(...depsStoreInstance)
         );
       }
     });

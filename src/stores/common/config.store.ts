@@ -1,15 +1,14 @@
 import { Configure } from "@/conf/setting.conf";
 import { BaseStore, StoreDecorator } from "@/base/base.store";
 import { observable, action, computed } from "mobx";
-import { BasePluginConstructor } from "@/base/base.plugin";
 
-@StoreDecorator()
+@StoreDecorator
 export default class ConfigStore extends BaseStore {
-  readonly name = "configStore";
   @observable.shallow
   primary: Partial<Configure>;
 
-  onInit() {
+  constructor() {
+    super();
     this.parseConfig(this.rootPlayer.input);
   }
 

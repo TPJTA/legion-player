@@ -5,20 +5,19 @@ import { formatSeconds } from "@/utility/tools";
 import { reaction } from "mobx";
 import "@/styles/plugin/ctrl/time.less";
 
-@PluginDecorator([VideoStore, CtrlStore])
-export default class TimeCtrlPulgin extends BasePlugin<
-  [VideoStore, CtrlStore]
-> {
+@PluginDecorator
+export default class TimeCtrlPulgin extends BasePlugin {
   private nodes: {
     current: HTMLElement;
     durction: HTMLElement;
   };
 
-  protected onInit(): void {
+  constructor(private videoStore: VideoStore, private ctrlStore: CtrlStore) {
+    super();
     this.renderTemplate();
 
     reaction(
-      () => this.store.videoStore.state.currentTime,
+      () => this.videoStore.state.currentTime,
       (time) => {
         this.nodes.current.innerHTML = formatSeconds(time);
       },
@@ -28,7 +27,7 @@ export default class TimeCtrlPulgin extends BasePlugin<
     );
 
     reaction(
-      () => this.store.videoStore.state.duration,
+      () => this.videoStore.state.duration,
       (time) => {
         this.nodes.durction.innerHTML = formatSeconds(time);
       },
@@ -51,6 +50,6 @@ export default class TimeCtrlPulgin extends BasePlugin<
       current: warp.querySelector(`.${ppx}-ctrl-time-current`),
       durction: warp.querySelector(`.${ppx}-ctrl-time-durction`),
     };
-    this.store.ctrlStore.renderCtrlBtn({ ele: warp }, "left", 2);
+    this.ctrlStore.renderCtrlBtn({ ele: warp }, "left", 2);
   }
 }

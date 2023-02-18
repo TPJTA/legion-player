@@ -8,17 +8,20 @@ import { reaction } from "mobx";
 import VideoStore from "@/stores/common/video.store";
 import bind from "bind-decorator";
 
-@PluginDecorator([PortStore, CtrlStore, VideoStore])
-export default class PlayPlugin extends BasePlugin<
-  [PortStore, CtrlStore, VideoStore]
-> {
+@PluginDecorator
+export default class PlayPlugin extends BasePlugin {
   private playButton: HTMLElement;
 
-  protected onInit(): void {
+  constructor(
+    private videoStore: VideoStore,
+    private portStore: PortStore,
+    private ctrlStore: CtrlStore
+  ) {
+    super();
     this.renderTemplate();
 
     reaction(
-      () => this.store.videoStore.state.paused,
+      () => this.videoStore.state.paused,
       (paused) => {
         this.playButton.classList[paused ? "add" : "remove"](
           `${this.ppx}-ctrl-pause`
@@ -46,7 +49,7 @@ export default class PlayPlugin extends BasePlugin<
     </div>
     `;
     this.playButton = playButton;
-    this.store.ctrlStore.renderCtrlBtn({ ele: playButton }, "left", 1);
+    this.ctrlStore.renderCtrlBtn({ ele: playButton }, "left", 1);
   }
 
   private addEventListener() {
@@ -59,10 +62,10 @@ export default class PlayPlugin extends BasePlugin<
 
   @bind
   private onClick() {
-    if (this.store.videoStore.state.paused) {
-      this.store.portStore.play();
+    if (this.videoStore.state.paused) {
+      this.portStore.play();
     } else {
-      this.store.portStore.pause();
+      this.portStore.pause();
     }
   }
 

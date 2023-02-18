@@ -8,18 +8,21 @@ import { reaction } from "mobx";
 import bind from "bind-decorator";
 import PortStore from "@/stores/common/port.store";
 
-@PluginDecorator([VideoStore, CtrlStore, PortStore])
-export default class FullPlugin extends BasePlugin<
-  [VideoStore, CtrlStore, PortStore]
-> {
+@PluginDecorator
+export default class FullPlugin extends BasePlugin {
   private fullButton: HTMLElement;
 
-  protected onInit(): void {
+  constructor(
+    private videoStore: VideoStore,
+    private ctrlStore: CtrlStore,
+    private portStore: PortStore
+  ) {
+    super();
     this.renderTemplate();
     this.addEventListener();
 
     reaction(
-      () => this.store.portStore.isFull,
+      () => this.portStore.isFull,
       (isFull) => {
         this.fullButton.classList[isFull ? "add" : "remove"](
           `${this.ppx}-ctrl-full-exit`
@@ -41,10 +44,10 @@ export default class FullPlugin extends BasePlugin<
 
   @bind
   onClick() {
-    if (this.store.portStore.isFull) {
-      this.store.portStore.exitFullScreen();
+    if (this.portStore.isFull) {
+      this.portStore.exitFullScreen();
     } else {
-      this.store.portStore.fullScreen();
+      this.portStore.fullScreen();
     }
   }
 
@@ -67,7 +70,7 @@ export default class FullPlugin extends BasePlugin<
     fullTooltip.classList.add(`${ppx}-ctrl-full-tooltip`);
     fullTooltip.innerHTML = "全屏";
 
-    this.store.ctrlStore.renderCtrlBtn(
+    this.ctrlStore.renderCtrlBtn(
       { ele: fullButton, tooltip: fullTooltip },
       "right",
       10

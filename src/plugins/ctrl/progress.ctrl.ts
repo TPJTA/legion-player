@@ -7,10 +7,8 @@ import "@/styles/plugin/ctrl/progress.less";
 import { formatSeconds } from "@/utility/tools";
 import bind from "bind-decorator";
 import { reaction } from "mobx";
-@PluginDecorator([VideoStore, CtrlStore, PortStore])
-export default class ProgressPlugin extends BasePlugin<
-  [VideoStore, CtrlStore, PortStore]
-> {
+@PluginDecorator
+export default class ProgressPlugin extends BasePlugin {
   private nodes: {
     progress: HTMLElement;
     buffer: HTMLElement;
@@ -18,22 +16,27 @@ export default class ProgressPlugin extends BasePlugin<
     tooltip: HTMLElement;
   };
 
-  onInit() {
+  constructor(
+    private videoStore: VideoStore,
+    private ctrlStore: CtrlStore,
+    private portStore: PortStore
+  ) {
+    super();
     this.renderTemplate();
     reaction(
-      () => this.store.videoStore.state.bufferedTime,
+      () => this.videoStore.state.bufferedTime,
       (buffTime) => {
         this.nodes.buffer.style.width =
-          (buffTime / this.store.videoStore.state.duration) * 100 + "%";
+          (buffTime / this.videoStore.state.duration) * 100 + "%";
       }
     );
 
     reaction(
-      () => this.store.videoStore.state.currentTime,
+      () => this.videoStore.state.currentTime,
       (currentTime) => {
-        if (!this.store.videoStore.state.seeking) {
+        if (!this.videoStore.state.seeking) {
           this.nodes.time.style.width =
-            (currentTime / this.store.videoStore.state.duration) * 100 + "%";
+            (currentTime / this.videoStore.state.duration) * 100 + "%";
         }
       }
     );
@@ -52,7 +55,7 @@ export default class ProgressPlugin extends BasePlugin<
       <div class="${ppx}-ctrl-progress-tooltip">00:00</div>
     `;
 
-    this.store.ctrlStore.renderCtrlBtn({ ele: progress }, "top");
+    this.ctrlStore.renderCtrlBtn({ ele: progress }, "top");
     this.nodes = {
       progress,
       buffer: progress.querySelector(`.${ppx}-ctrl-progress-buffer`),
@@ -76,24 +79,21 @@ export default class ProgressPlugin extends BasePlugin<
 
   @bind
   private onMouseenter() {
-    if (!this.store.ctrlStore.state.hide) {
+    if (!this.ctrlStore.state.hide) {
       this.nodes.progress.classList.add(`${this.ppx}-ctrl-progress-over`);
     }
   }
 
   @bind
   private onMousemove(e) {
-    if (
-      !this.store.ctrlStore.state.hide &&
-      !this.store.videoStore.state.seeking
-    ) {
+    if (!this.ctrlStore.state.hide && !this.videoStore.state.seeking) {
       this.setTooltipPosition(e.pageX);
     }
   }
 
   @bind
   private onMouseleave() {
-    if (!this.store.videoStore.state.seeking) {
+    if (!this.videoStore.state.seeking) {
       this.nodes.progress.classList.remove(`${this.ppx}-ctrl-progress-over`);
       this.nodes.tooltip.style.display = "none";
     }
@@ -160,7 +160,7 @@ export default class ProgressPlugin extends BasePlugin<
     }
 
     this.nodes.tooltip.innerHTML = formatSeconds(
-      this.store.videoStore.state.duration * percent
+      this.videoStore.state.duration * percent
     );
     this.nodes.tooltip.style.left = left + "px";
   }
@@ -168,10 +168,10 @@ export default class ProgressPlugin extends BasePlugin<
   @bind
   private progressDragEnd() {
     const percent = parseFloat(this.nodes.time.style.width);
-    const time = (this.store.videoStore.state.duration * percent) / 100;
+    const time = (this.videoStore.state.duration * percent) / 100;
     this.nodes.progress.classList.remove(`${this.ppx}-ctrl-progress-over`);
     this.nodes.tooltip.style.display = "none";
-    this.store.portStore.seek(time, true);
+    this.portStore.seek(time, true);
     this.rootPlayer.emit(Events.Player_seeked);
     window.removeEventListener("mousemove", this.progressDrag);
     window.removeEventListener("mouseup", this.progressDragEnd);

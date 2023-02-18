@@ -9,12 +9,8 @@ const CtrlStoreDefaultState = {
 };
 type CtrlBtn = { ele: HTMLElement; tooltip?: HTMLElement };
 
-@StoreDecorator([VideoStore])
-export default class CtrlStore extends BaseStore<
-  typeof CtrlStoreDefaultState,
-  [VideoStore]
-> {
-  readonly name = "ctrlStore";
+@StoreDecorator
+export default class CtrlStore extends BaseStore<typeof CtrlStoreDefaultState> {
   get defaultState() {
     return CtrlStoreDefaultState;
   }
@@ -27,7 +23,8 @@ export default class CtrlStore extends BaseStore<
   private hideTimer: number;
   private ctrlOver = false;
 
-  protected onInit() {
+  constructor(private videoStore: VideoStore) {
+    super();
     this.preloadDOM();
 
     reaction(

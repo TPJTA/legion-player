@@ -4,22 +4,16 @@ import { Events, CSS_PREFIX } from "@/conf/index.conf";
 import "reflect-metadata";
 
 export { RootPlayer };
-export type BaseStoreConstructor = new (rootPlayer: RootPlayer) => BaseStore;
+export type BaseStoreConstructor = new (...depsStore: BaseStore[]) => BaseStore;
 
-export abstract class BaseStore<
-  T extends object = any,
-  depStore extends BaseStore[] = any
-> {
-  /** @description store标识 */
-  abstract readonly name: string;
-
+export abstract class BaseStore<T extends object = any> {
   /** @description css标识 */
   protected readonly ppx = CSS_PREFIX;
 
   /**
    * @description rootplay实例
    */
-  protected rootPlayer: RootPlayer;
+  rootPlayer: RootPlayer;
 
   /**
    * @description store 的状态，如需修改调用 `this.setState`
@@ -33,19 +27,10 @@ export abstract class BaseStore<
     return {} as T;
   }
 
-  /**
-   * @description 依赖的其他store
-   */
-  protected store: {
-    [key in depStore[number]["name"]]: Extract<depStore[number], { name: key }>;
-  };
-
-  constructor(rootPlayer: RootPlayer) {
+  constructor() {
     this.state = observable.object(this.defaultState, null, { deep: false });
-    this.rootPlayer = rootPlayer;
-    this.onInit();
-    rootPlayer.on(Events.Player_Reload, this.onReload);
-    rootPlayer.on(Events.Player_Destory, this.onDestory);
+    this.rootPlayer.on(Events.Player_Reload, this.onReload);
+    this.rootPlayer.on(Events.Player_Destory, this.onDestory);
   }
 
   @action
@@ -56,9 +41,6 @@ export abstract class BaseStore<
       }
     });
   }
-
-  /** @description 初始化完成调用 */
-  protected onInit() {}
 
   /**
    * @description 播放器重载时自动调用
@@ -85,10 +67,6 @@ export abstract class BaseStore<
 /**
  * @description store装饰器, 用于收集依赖的store
  */
-export function StoreDecorator(
-  depsStore?: BaseStoreConstructor[]
-): ClassDecorator {
-  return (constructor) => {
-    Reflect.defineMetadata("depsStore", depsStore, constructor);
-  };
-}
+export const StoreDecorator: ClassDecorator = function (target) {
+  return target;
+};

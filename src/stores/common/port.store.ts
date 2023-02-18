@@ -4,18 +4,16 @@ import VideoStore from "./video.store";
 import { computed, when } from "mobx";
 import { Video_Screen } from "./video.store";
 
-@StoreDecorator([VideoStore])
-export default class PortStore extends BaseStore<null, [VideoStore]> {
-  readonly name = "portStore";
-  private videoStore: VideoStore;
+@StoreDecorator
+export default class PortStore extends BaseStore<null> {
   private playPromise: Promise<void>;
 
   get video() {
     return this.videoStore.video;
   }
 
-  protected onInit() {
-    this.videoStore = this.store.videoStore;
+  constructor(private videoStore: VideoStore) {
+    super();
   }
 
   seek(time: number, play = false) {

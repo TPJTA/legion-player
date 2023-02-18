@@ -1,4 +1,4 @@
-import { BaseStore } from "@/base/base.store";
+import { BaseStore, StoreDecorator } from "@/base/base.store";
 import { Events } from "@/conf/index.conf";
 import "@/styles/stores/video.less";
 import bind from "bind-decorator";
@@ -51,8 +51,8 @@ const VideoDefaultState = {
   videoWidth: 0,
 };
 
+@StoreDecorator
 export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
-  readonly name = "videoStore";
   private area: HTMLElement;
 
   video: HTMLVideoElement;
@@ -61,7 +61,8 @@ export default class VideoStore extends BaseStore<typeof VideoDefaultState> {
     return VideoDefaultState;
   }
 
-  protected onInit() {
+  constructor() {
+    super();
     this.preloadDOM();
   }
 

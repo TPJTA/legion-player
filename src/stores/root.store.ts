@@ -1,5 +1,5 @@
 import { RootPlayer as IRootPlayer } from "@/root.player";
-import type { BaseStore, BaseStoreConstructor } from "@/base/base.store";
+import { BaseStore, BaseStoreConstructor } from "@/base/base.store";
 import { Events, commonStores } from "@/conf/index.conf";
 import PortStore from "./common/port.store";
 
@@ -10,6 +10,7 @@ export class RootStore {
 
   constructor(rootPlayer: RootPlayer) {
     this.rootPlayer = rootPlayer;
+    BaseStore.prototype.rootPlayer = rootPlayer;
     this.initSubStore();
     this.rootPlayer.emit(Events.Player_Init);
   }
@@ -25,45 +26,25 @@ export class RootStore {
   }
 
   initStore(storeConstructor: BaseStoreConstructor) {
+    let instanceStore: BaseStore;
     const depsStore: BaseStoreConstructor[] = Reflect.getMetadata(
-      "depsStore",
+      "design:paramtypes",
       storeConstructor
     );
-    const depsStoreObj = {};
 
     if (!this.subStore.has(storeConstructor)) {
+      let depsStoreInstance: BaseStore[] = [];
+
       if (depsStore) {
-        for (const i of depsStore) {
-          this.initStore(i);
-        }
+        depsStoreInstance = depsStore.map((dep) => this.initStore(dep));
       }
-      depsStore?.forEach((i) => {
-        const store = this.subStore.get(i);
-        if (store.name) {
-          depsStoreObj[store.name] = store;
-        }
-      });
-      storeConstructor.prototype.store = depsStoreObj;
 
-      const store = new storeConstructor(this.rootPlayer);
-      if (!store.name) {
-        console.error(
-          `The ${storeConstructor.name} has no name, Please set a name`
-        );
-      }
-      this.subStore.set(storeConstructor, store);
-
-      depsStoreObj[store.name] = store;
+      instanceStore = new storeConstructor(...depsStoreInstance);
+      this.subStore.set(storeConstructor, instanceStore);
     } else {
-      const curStore = this.subStore.get(storeConstructor);
-      depsStoreObj[curStore.name] = curStore;
-      depsStore?.forEach((i) => {
-        const store = this.subStore.get(i);
-        if (store.name) {
-          depsStoreObj[store.name] = store;
-        }
-      });
+      instanceStore = this.subStore.get(storeConstructor);
     }
-    return depsStoreObj;
+
+    return instanceStore;
   }
 }
