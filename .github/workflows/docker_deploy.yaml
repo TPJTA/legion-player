@@ -2,7 +2,7 @@ name: lint check
 on:
   push:
     branches:
-      - feature/workflow
+      - feature/master
 jobs:
   lint:
     runs-on: ubuntu-latest
